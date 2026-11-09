@@ -35,6 +35,9 @@ apiClient.interceptors.request.use((config) => {
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  if (config.data instanceof FormData && config.headers) {
+    delete config.headers['Content-Type']
+  }
   if ((config.method || 'get').toLowerCase() === 'get') {
     config.params = { ...(config.params || {}), _t: Date.now() }
   }
