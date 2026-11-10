@@ -4,6 +4,9 @@ export interface IProductImage {
   id: number
   productId: number
   url: string
+  imageUrl?: string
+  fileName?: string | null
+  publicId?: string | null
   is_primary: boolean
   createdAt?: string
   updatedAt?: string
