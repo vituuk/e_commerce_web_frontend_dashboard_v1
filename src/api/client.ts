@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from "axios";
 import {
   getAccessToken,
   getUserFromToken,
@@ -36,10 +36,10 @@ apiClient.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   if (config.data instanceof FormData && config.headers) {
-    if (typeof config.headers.delete === 'function') {
-      config.headers.delete('Content-Type')
+    if (typeof config.headers.delete === "function") {
+      config.headers.delete("Content-Type");
     } else {
-      delete config.headers['Content-Type']
+      delete config.headers["Content-Type"];
     }
   }
   if ((config.method || "get").toLowerCase() === "get") {
@@ -110,7 +110,14 @@ export function extractErrorMessage(
 ): string {
   if (axios.isAxiosError(error)) {
     const msg = error.response?.data?.message;
-    if (typeof msg === "string" && msg.trim()) return msg;
+    const detail = error.response?.data?.error;
+    if (typeof msg === "string" && msg.trim()) {
+      if (typeof detail === "string" && detail.trim() && !msg.includes(detail)) {
+        return `${msg} (${detail})`;
+      }
+      return msg;
+    }
+    if (typeof detail === "string" && detail.trim()) return detail;
     if (typeof error.message === "string" && error.message.trim())
       return error.message;
   }
@@ -119,33 +126,37 @@ export function extractErrorMessage(
 }
 
 const MIME_TO_EXT: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/jpg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/gif': 'gif',
-  'image/svg+xml': 'svg',
-  'image/avif': 'avif',
-}
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/svg+xml": "svg",
+  "image/avif": "avif",
+};
 
 // Convert base64 data URL (from CrudDialog file input) into a File object for multipart/form-data
-export function dataUrlToFile(dataUrl: string, filename = 'upload'): File | null {
+export function dataUrlToFile(
+  dataUrl: string,
+  filename = "upload",
+): File | null {
   try {
-    const commaIdx = dataUrl.indexOf(',')
-    if (commaIdx === -1) return null
-    const header = dataUrl.slice(0, commaIdx)
-    const base64 = dataUrl.slice(commaIdx + 1).replace(/\s/g, '')
-    const mimeMatch = header.match(/:(.*?);/)
-    const mime = (mimeMatch ? mimeMatch[1] : 'image/png').toLowerCase()
-    const bstr = atob(base64)
-    let n = bstr.length
-    const u8arr = new Uint8Array(n)
+    const commaIdx = dataUrl.indexOf(",");
+    if (commaIdx === -1) return null;
+    const header = dataUrl.slice(0, commaIdx);
+    const base64 = dataUrl.slice(commaIdx + 1).replace(/\s/g, "");
+    const mimeMatch = header.match(/:(.*?);/);
+    const mime = (mimeMatch ? mimeMatch[1] : "image/png").toLowerCase();
+    const bstr = atob(base64);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
     while (n--) {
       u8arr[n] = bstr.charCodeAt(n);
     }
-    const ext = MIME_TO_EXT[mime] || mime.split('/')[1]?.replace(/\+.*$/, '') || 'png'
-    const stem = filename.replace(/\.[^.]+$/, '') || 'upload'
-    return new File([u8arr], `${stem}.${ext}`, { type: mime })
+    const ext =
+      MIME_TO_EXT[mime] || mime.split("/")[1]?.replace(/\+.*$/, "") || "png";
+    const stem = filename.replace(/\.[^.]+$/, "") || "upload";
+    return new File([u8arr], `${stem}.${ext}`, { type: mime });
   } catch {
     return null;
   }
@@ -306,10 +317,10 @@ export const authApi = {
   },
 
   async uploadAvatar(file: File): Promise<string> {
-    const formData = new FormData()
-    formData.append('file', file)
-    const res = await apiClient.post('/auth/profile/avatar', formData)
-    return res.data?.data?.url || ''
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await apiClient.post("/auth/profile/avatar", formData);
+    return res.data?.data?.url || "";
   },
 
   async getUserProfileById(userId: number | string) {
@@ -566,9 +577,9 @@ export const productImageApi = {
     payload: { image?: File; file?: File; url?: string; is_primary?: boolean },
   ) {
     const formData = new FormData();
-    const uploadFile = payload.file || payload.image
+    const uploadFile = payload.file || payload.image;
     if (uploadFile) {
-      formData.append('file', uploadFile)
+      formData.append("file", uploadFile);
     }
     if (payload.url) {
       formData.append("url", payload.url);
@@ -576,27 +587,27 @@ export const productImageApi = {
     if (payload.is_primary !== undefined) {
       formData.append("is_primary", String(payload.is_primary));
     }
-    const res = await apiClient.post(`/product/${productId}/images`, formData)
-    return res.data?.data
+    const res = await apiClient.post(`/product/${productId}/images`, formData);
+    return res.data?.data;
   },
   async update(
     productId: number | string,
     id: number | string,
     payload: {
-      productId?: number | string
-      image?: File
-      file?: File
-      url?: string
-      is_primary?: boolean
+      productId?: number | string;
+      image?: File;
+      file?: File;
+      url?: string;
+      is_primary?: boolean;
     },
   ) {
     const formData = new FormData();
     if (payload.productId !== undefined && payload.productId !== "") {
       formData.append("productId", String(payload.productId));
     }
-    const uploadFile = payload.file || payload.image
+    const uploadFile = payload.file || payload.image;
     if (uploadFile) {
-      formData.append('file', uploadFile)
+      formData.append("file", uploadFile);
     }
     if (payload.url) {
       formData.append("url", payload.url);
@@ -604,11 +615,14 @@ export const productImageApi = {
     if (payload.is_primary !== undefined) {
       formData.append("is_primary", String(payload.is_primary));
     }
-    const res = await apiClient.put(`/product/${productId}/images/${id}`, formData)
-    return res.data?.data
+    const res = await apiClient.put(
+      `/product/${productId}/images/${id}`,
+      formData,
+    );
+    return res.data?.data;
   },
   getDownloadUrl(imageId: number | string) {
-    return `${API_BASE_URL}/product/images/${imageId}/download`
+    return `${API_BASE_URL}/product/images/${imageId}/download`;
   },
   async remove(productId: number | string, id: number | string) {
     const res = await apiClient.delete(`/product/${productId}/images/${id}`);
